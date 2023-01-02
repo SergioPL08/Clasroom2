@@ -20,7 +20,7 @@ public class AsignaturasController implements Initializable {
      */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        // TODO
+        
     }    
     
 }
