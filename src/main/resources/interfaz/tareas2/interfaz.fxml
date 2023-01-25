@@ -27,7 +27,9 @@
                      <children>
                         <Button layoutY="2.0" mnemonicParsing="false" onAction="#home" text="home" />
                         <Button layoutX="809.0" layoutY="4.0" mnemonicParsing="false" onAction="#salir" text="salir" />
-                        <Button layoutX="57.0" layoutY="2.0" mnemonicParsing="false" onAction="#showCrearCurso" text="Crear curso" />
+                        <Button fx:id="buttonCrearCurso" layoutX="57.0" layoutY="2.0" mnemonicParsing="false" onAction="#showCrearCurso" text="Crear clase" />
+                        <Button layoutX="657.0" layoutY="2.0" mnemonicParsing="false" onAction="#pruebas" text="Pruebas" />
+                        <Button layoutX="139.0" layoutY="4.0" mnemonicParsing="false" onAction="#matricularAlumnos" text="Matricular Alumnos" />
                      </children></Pane>
                </items>
             </ToolBar>
@@ -35,7 +37,7 @@
       </HBox>
       <Pane id="asignaturas" fx:id="clases" layoutY="40.0" prefHeight="563.0" prefWidth="867.0">
          <children>
-            <GridPane layoutX="-3.0" layoutY="54.0" prefHeight="467.0" prefWidth="873.0">
+            <GridPane fx:id="gridClases" layoutX="-3.0" layoutY="54.0" prefHeight="467.0" prefWidth="873.0">
                <columnConstraints>
                   <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
                   <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
@@ -395,7 +397,7 @@
             </Label>
          </children>
       </Pane>
-      <Pane fx:id="paneCrearCurso" layoutX="248.0" layoutY="210.0" prefHeight="183.0" prefWidth="371.0" style="-fx-background-color: #FFF;">
+      <Pane fx:id="paneCrearCurso" layoutX="248.0" layoutY="210.0" prefHeight="183.0" prefWidth="371.0" style="-fx-background-color: #FFF;" visible="false">
          <children>
             <GridPane layoutX="36.0" layoutY="44.0" prefHeight="109.0" prefWidth="300.0">
               <columnConstraints>
@@ -409,9 +411,9 @@
               </rowConstraints>
                <children>
                   <Label text="Nombre (obligatorio)" />
-                  <TextField promptText="Matemáticas" GridPane.columnIndex="1" />
+                  <TextField fx:id="nombreAsignatura" promptText="Matemáticas" GridPane.columnIndex="1" />
                   <Label text="Curso" GridPane.rowIndex="1" />
-                  <TextField promptText="1º Bachillerato" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                  <TextField fx:id="nombreCurso" promptText="1º Bachillerato" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                   <Button alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" onAction="#crearCurso" prefHeight="25.0" prefWidth="123.0" style="-fx-background-color: #ff6400;" text="Crear" textAlignment="CENTER" textFill="WHITE" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="2" />
                </children>
             </GridPane>
@@ -420,6 +422,7 @@
                   <Font name="Calibri" size="20.0" />
                </font>
             </Label>
+            <Label fx:id="labelCrearCurso" alignment="CENTER_RIGHT" contentDisplay="RIGHT" layoutX="148.0" layoutY="16.0" prefHeight="23.0" prefWidth="188.0" textFill="RED" />
          </children>
       </Pane>
    </children>

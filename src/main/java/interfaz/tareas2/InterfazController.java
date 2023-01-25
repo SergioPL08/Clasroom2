@@ -15,6 +15,7 @@ import java.util.logging.Logger;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -22,10 +23,20 @@ import javafx.scene.control.ToolBar;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.stage.Window;
-
+import javafx.application.Application;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+import javafx.stage.Stage;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.scene.canvas.*;
+import javafx.scene.layout.Pane;
+import javafx.scene.shape.*;
 /**
  * FXML Controller class
  *
@@ -100,6 +111,16 @@ public class InterfazController implements Initializable {
     private Button crearCurso;
     @FXML
     private Pane paneCrearCurso;
+    @FXML
+    private TextField nombreCurso;
+    @FXML
+    private Label labelCrearCurso;
+    @FXML
+    private Button buttonCrearCurso;
+    @FXML
+    private TextField nombreAsignatura;
+    @FXML
+    private GridPane gridClases;
 
     /**
      * Initializes the controller class.
@@ -147,7 +168,7 @@ public class InterfazController implements Initializable {
                 clases.setVisible(true);
                 cambiaTamaño(880, 600);
                 smg2.setText("¡Bienvenido " + user + "!");
-                crearCurso.setVisible(profesor);
+                buttonCrearCurso.setVisible(profesor);
             } else {
                 msg.setText("Usuario o contraseña incorrectos");
             }
@@ -340,11 +361,33 @@ public class InterfazController implements Initializable {
     }
 
     
+    
     @FXML
     private void crearCurso(ActionEvent event) {
-        paneCrearCurso.setVisible(false);
-        clases.setDisable(false);
-        menu.setDisable(true);
+        String nombre = nombreAsignatura.getText();
+        String curso = nombreCurso.getText();
+        if(nombre.equals(""))
+            labelCrearCurso.setText("Introduzca el nombre!");
+        else{
+            String insert = "INSERT INTO asignaturas (nombre,curso) VALUES ('"+nombre+"','"+curso+"')";
+            System.out.println(insert);
+            int filas = Conector.insertTable(insert, conector);
+            if(filas<=0){
+                labelCrearCurso.setText("Clase creada correctamente");
+                /*
+                int filasClases = gridClases.getRowCount();
+                int columnasClases = gridClases.getColumnCount();
+                gridClases.add(menu, columnasClases, filasClases);
+                Pane clase = new Pane();
+                clase.setStyle("-fx-background-color: #6079FF");
+                clase.setPrefHeight(500);
+                clase.setPrefWidth(500);
+                */
+            }
+            paneCrearCurso.setVisible(false);
+            clases.setDisable(false);
+            menu.setDisable(false);
+        }
     }
 
     @FXML
@@ -353,4 +396,26 @@ public class InterfazController implements Initializable {
         clases.setDisable(true);
         menu.setDisable(true);
     }
+
+    @FXML
+    private void pruebas(ActionEvent event) {
+        /*
+        int filasClases = gridClases.getRowCount();
+        int columnasClases = gridClases.getColumnCount();
+        gridClases.add(menu, columnasClases, filasClases);
+        Label labelNuevaClase = new Label("xdddd");
+        Pane nuevaClase = new Pane(labelNuevaClase);
+        nuevaClase.setPrefSize(500, 500);
+        nuevaClase.setStyle("-fx-background-color: #6079FF");
+        Scene scene = new Scene(nuevaClase,400,400);
+        App.getStage().setScene(scene);
+        App.getStage().show();
+        */
+    }
+
+    @FXML
+    private void matricularAlumnos(ActionEvent event) {
+        
+    }
+
 }

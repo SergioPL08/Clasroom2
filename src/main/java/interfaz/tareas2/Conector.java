@@ -71,20 +71,18 @@ public class Conector {
         }
         return null;
     }
-//    
-//    public ResultSet insertTable(String consulta, Connection conDB){
-//        try {
-//            Statement st = conDB.createStatement();
-//            ResultSet rs = st.executeQuery(consulta);
-//            rs.moveToInsertRow();
-//            rs.updateString(PORT, PORT);
-//            return rs;
-//        } catch (SQLException ex) {
-//            System.out.println("Error al insertar datos");
-//        }
-//        return null;
-//    }
-//    
+    
+    public static int insertTable(String consulta, Connection conDB){
+        try {
+            Statement st = conDB.createStatement();
+            int resultado = st.executeUpdate(consulta);
+            return resultado;
+        } catch (SQLException ex) {
+            System.out.println("Error al insertar datos");
+        }
+        return 0;
+    }
+    
 //    public static int editTable(String consulta, Connection conDB){
 //        try{
 //            Statement st = conDB.createStatement();
