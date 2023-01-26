@@ -359,8 +359,10 @@ public class InterfazController implements Initializable {
                         String insertProfesor = "INSERT INTO participaciones VALUES('"+idPersona+"','"+idClase+"')";
                         System.out.println(insertProfesor);
                         int filasClase = Conector.insertTable(insertProfesor, conector);
-                        if(filasClase>0)
+                        if(filasClase>0){
                             labelCrearCurso.setText("Clase creada correctamente");
+                            arrayClases.add(idClase);
+                        }
                         else
                             labelCrearCurso.setText("Error al insertar el profesor");
                     }
