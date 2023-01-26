@@ -9,6 +9,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -71,10 +72,6 @@ public class InterfazController implements Initializable {
     @FXML
     private ImageView clase7;
     @FXML
-    private ImageView clase8;
-    @FXML
-    private ImageView clase9;
-    @FXML
     private Label smg2;
 
     String user;
@@ -117,11 +114,15 @@ public class InterfazController implements Initializable {
     private Label labelCrearCurso;
     @FXML
     private Button buttonCrearCurso;
-    @FXML
     private TextField nombreAsignatura;
     @FXML
     private GridPane gridClases;
-
+    String idPersona;
+    
+    ArrayList arrayClases;
+    @FXML
+    private TextField nombreClase;
+    
     /**
      * Initializes the controller class.
      */
@@ -155,8 +156,8 @@ public class InterfazController implements Initializable {
                 String sqlid = "SELECT id_persona FROM personas WHERE usuario='" + user + "'";
                 ResultSet rsgetid = st.executeQuery(sqlid);
                 if (rsgetid.first()) {
-                    String id = rsgetid.getString(1);
-                    String esprofe = "SELECT id_profesor FROM profesores WHERE id_profesor='" + id + "'";
+                    idPersona = rsgetid.getString(1);
+                    String esprofe = "SELECT (profesor) FROM personas WHERE id_persona='" + idPersona + "'";
                     ResultSet rsesprofe = st.executeQuery(esprofe);
                     if(rsesprofe.first())
                         profesor=true;
@@ -298,44 +299,21 @@ public class InterfazController implements Initializable {
         else {
             try {
                 ResultSet rsUsuario = Conector.getSelect("SELECT * FROM personas WHERE usuario='"+usuario+"'", conector);
+                String sql;
                 if(!rsUsuario.next()){
-                    if (profesor) {
-                        try {
-                            Statement st = conector.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
-                            String sql = "INSERT INTO personas VALUES (null,'" + nombre + "','" + apellidos + "','" + correo + "','" + usuario + "','" + pass + "')";
-                            int resultado = st.executeUpdate(sql);
-                            if (resultado > 0) {
-                                sql = "SELECT id_persona FROM personas WHERE usuario='" + usuario + "'";
-                                ResultSet rs = st.executeQuery(sql);
-                                if (rs.first()) {
-                                    String id = rs.getString(1);
-                                    sql = "INSERT INTO profesores VALUES (" + id + ")";
-                                    resultado = st.executeUpdate(sql);
-                                    if (resultado > 0) {
-                                        msg1.setText("¡Profesor/a registrado/a correctamente!");
-                                    }
-                                }
-                            }
-                        } catch (SQLException ex) {
-                            Logger.getLogger(InterfazController.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                    } else if (!profesor){
-                        Statement st = conector.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
-                        String sql = "INSERT INTO personas VALUES (null,'" + nombre + "','" + apellidos + "','" + correo + "','" + usuario + "','" + pass + "')";
-                        int resultado = st.executeUpdate(sql);
-                        if (resultado > 0) {
-                            sql = "SELECT id_persona FROM personas WHERE usuario='" + usuario + "'";
-                            ResultSet rs = st.executeQuery(sql);
-                            if (rs.first()) {
-                                String id = rs.getString(1);
-                                sql = "INSERT INTO alumnos (id_alumno) VALUES (" + id + ")";
-                                resultado = st.executeUpdate(sql);
-                                if (resultado > 0) {
-                                    msg1.setText("¡Alumno/a registrado/a correctamente!");
-                                }
-                            }
-                        }
+                    if (profesor) 
+                        sql = "INSERT INTO personas VALUES (null,'" + nombre + "','" + apellidos + "','" + correo + "','" + usuario + "','" + pass + "',True)";
+                    else
+                        sql = "INSERT INTO personas VALUES (null,'" + nombre + "','" + apellidos + "','" + correo + "','" + usuario + "','" + pass + "',False)";
+                    Statement st = conector.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
+                    int resultado = st.executeUpdate(sql);
+                    if (resultado > 0) {
+                        if(profesor)
+                            msg1.setText("¡Profesor/a registrado/a correctamente!");
+                        else
+                            msg1.setText("¡Alumno/a registrado/a correctamente!");
                     }
+                        
                 }
                 else
                     msg1.setText("El nombre de usuario ya existe!!");
@@ -364,26 +342,36 @@ public class InterfazController implements Initializable {
     
     @FXML
     private void crearCurso(ActionEvent event) {
-        String nombre = nombreAsignatura.getText();
+        String nombre = nombreClase.getText();
         String curso = nombreCurso.getText();
         if(nombre.equals(""))
             labelCrearCurso.setText("Introduzca el nombre!");
         else{
-            String insert = "INSERT INTO asignaturas (nombre,curso) VALUES ('"+nombre+"','"+curso+"')";
+            String insert = "INSERT INTO clases (nombre,curso) VALUES ('"+nombre+"','"+curso+"')";
             System.out.println(insert);
             int filas = Conector.insertTable(insert, conector);
-            if(filas<=0){
-                labelCrearCurso.setText("Clase creada correctamente");
-                /*
-                int filasClases = gridClases.getRowCount();
-                int columnasClases = gridClases.getColumnCount();
-                gridClases.add(menu, columnasClases, filasClases);
-                Pane clase = new Pane();
-                clase.setStyle("-fx-background-color: #6079FF");
-                clase.setPrefHeight(500);
-                clase.setPrefWidth(500);
-                */
+            if(filas>0){
+                try {
+                    String select = "SELECT id_clase FROM clases ORDER BY id_clase DESC";
+                    ResultSet salida = Conector.getSelect(select, conector);
+                    if(salida.first()){
+                        String idClase = salida.getString(1);
+                        String insertProfesor = "INSERT INTO participaciones VALUES('"+idPersona+"','"+idClase+"')";
+                        System.out.println(insertProfesor);
+                        int filasClase = Conector.insertTable(insertProfesor, conector);
+                        if(filasClase>0)
+                            labelCrearCurso.setText("Clase creada correctamente");
+                        else
+                            labelCrearCurso.setText("Error al insertar el profesor");
+                    }
+                    
+                } catch (SQLException ex) {
+                    Logger.getLogger(InterfazController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                    
             }
+            else
+                labelCrearCurso.setText("Error al crear la clase");
             paneCrearCurso.setVisible(false);
             clases.setDisable(false);
             menu.setDisable(false);
@@ -397,21 +385,6 @@ public class InterfazController implements Initializable {
         menu.setDisable(true);
     }
 
-    @FXML
-    private void pruebas(ActionEvent event) {
-        /*
-        int filasClases = gridClases.getRowCount();
-        int columnasClases = gridClases.getColumnCount();
-        gridClases.add(menu, columnasClases, filasClases);
-        Label labelNuevaClase = new Label("xdddd");
-        Pane nuevaClase = new Pane(labelNuevaClase);
-        nuevaClase.setPrefSize(500, 500);
-        nuevaClase.setStyle("-fx-background-color: #6079FF");
-        Scene scene = new Scene(nuevaClase,400,400);
-        App.getStage().setScene(scene);
-        App.getStage().show();
-        */
-    }
 
     @FXML
     private void matricularAlumnos(ActionEvent event) {
