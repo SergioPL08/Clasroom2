@@ -122,6 +122,16 @@ public class InterfazController implements Initializable {
     ArrayList arrayClases;
     @FXML
     private TextField nombreClase;
+    @FXML
+    private Pane paneMatricular;
+    @FXML
+    private ComboBox comboBoxMatricular;
+    @FXML
+    private Pane paneCrearTarea;
+    @FXML
+    private Pane paneTareasAlumno;
+    @FXML
+    private Pane paneTareasProfesor;
     
     /**
      * Initializes the controller class.
@@ -179,6 +189,7 @@ public class InterfazController implements Initializable {
 
     }
 
+    
     @FXML
     public void home() {
         setInvisible();
@@ -251,6 +262,10 @@ public class InterfazController implements Initializable {
         imgRegistrarProfesor.setVisible(false);
         imgRegistrarAlumno.setVisible(false);
         paneCrearCurso.setVisible(false);
+        paneMatricular.setVisible(false);
+        paneCrearTarea.setVisible(false);
+        paneTareasAlumno.setVisible(false);
+        paneTareasProfesor.setVisible(false);
     }
 
     @FXML
