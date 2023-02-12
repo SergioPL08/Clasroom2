@@ -4,16 +4,24 @@
  */
 package interfaz.tareas2;
 
+import java.io.File;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -30,14 +38,24 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.stage.Window;
 import javafx.application.Application;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.canvas.*;
+import javafx.scene.control.TableView.TableViewSelectionModel;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.Pane;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 /**
  * FXML Controller class
@@ -67,15 +85,8 @@ public class InterfazController implements Initializable {
 
     Connection conector;
     @FXML
-    private ImageView clase1;
-    @FXML
-    private ImageView clase2;
-    @FXML
-    private ImageView clase7;
-    @FXML
     private Label smg2;
 
-    String user;
     private Pane login1;
     @FXML
     private Label msg1;
@@ -85,7 +96,6 @@ public class InterfazController implements Initializable {
     private ImageView imgProfesor;
     @FXML
     private Pane elegirPersona;
-    public boolean profesor;
     @FXML
     private TextField usuarioTextField;
     @FXML
@@ -118,14 +128,10 @@ public class InterfazController implements Initializable {
     private TextField nombreAsignatura;
     @FXML
     private GridPane gridClases;
-    String idPersona;
-    
-    ArrayList arrayClases = new ArrayList();
     @FXML
     private TextField nombreClase;
     @FXML
     private Pane paneMatricular;
-    private ComboBox comboBoxMatricular;
     @FXML
     private Pane paneCrearTarea;
     @FXML
@@ -138,7 +144,6 @@ public class InterfazController implements Initializable {
     private ComboBox<?> comboBoxAlumnosMatricular;
     @FXML
     private Button anadirAlumnoButton;
-    @FXML
     private ComboBox<?> comboBoxCursosMatricular;
     @FXML
     private Button verMatricularAlumnosButton;
@@ -161,7 +166,65 @@ public class InterfazController implements Initializable {
     private Label labelAsignatura3;
     @FXML
     private Label labelCurso3;
-    
+    ObservableList<tarea> obs;
+    String nombreClaseMatricular;
+    int idClase;
+    int idPersona;
+    int contador=0;
+    ArrayList arrayClases = new ArrayList();
+    public boolean profesor;
+    private ComboBox comboBoxMatricular;
+    String user;
+    ArrayList <clase> datosClase = new ArrayList();
+    @FXML
+    private Button botonVolverClase;
+    @FXML
+    private Button botonAvanzarClase;
+    @FXML
+    private ColorPicker colorPicker;
+    @FXML
+    private Pane paneAsignatura1;
+    @FXML
+    private Pane paneAsignatura2;
+    @FXML
+    private Pane paneAsignatura3;
+    @FXML
+    private Label labelClaseActual;
+    @FXML
+    private Pane paneNoHayClases;
+    @FXML
+    private ImageView imgNoHayClases;
+    @FXML
+    private TextField enunciadoTextField;
+    @FXML
+    private TextArea descripcionTextArea;
+    @FXML
+    private DatePicker fechaEntregaDatePicker;
+    @FXML
+    private TextField ponderacionTextField;
+    @FXML
+    private ComboBox<?> tipoTareaComboBox;
+    @FXML
+    private Button botonShowPaneCrearTarea;
+    @FXML
+    private Label msgLabelCrearTarea;
+    @FXML
+    private TableView<tarea> tablaTareas;
+    ArrayList<tarea> listaTareas;
+    @FXML
+    private TableColumn<tarea, String> nombreTarea;
+    @FXML
+    private TableColumn<tarea, String> tipoTarea;
+    @FXML
+    private TableColumn<tarea, Date> fechaEntrega;
+    @FXML
+    private TableColumn<tarea, Integer> idTarea;
+    private int posicionTareaEnTabla;
+    private Label tareaDescripcion;
+    @FXML
+    private Label nombreTareaAlumno;
+    @FXML
+    private Label tareaDescripcionAlumno;
     /**
      * Initializes the controller class.
      */
@@ -172,9 +235,9 @@ public class InterfazController implements Initializable {
         login.setVisible(true);
         imagenes();
         
+        
     }
 
-    @FXML
     public void clase() {
         setInvisible();
         clase.setVisible(true);
@@ -186,63 +249,56 @@ public class InterfazController implements Initializable {
     public void iniciaSesion() {
         user = username.getText();
         String pass = password.getText();
-        ArrayList <clase> datosClase = new ArrayList();
         try {
             String consulta = "SELECT * FROM personas WHERE usuario='" + user + "' AND password ='" + pass + "'";
             //System.out.println(consulta);
-            Statement st = conector.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
-            ResultSet rs = st.executeQuery(consulta);
-            if (rs.first()) {
-                String sqlid = "SELECT id_persona FROM personas WHERE usuario='" + user + "'";
-                ResultSet rsgetid = st.executeQuery(sqlid);
-                if (rsgetid.first()) {
-                    idPersona = rsgetid.getString(1);
-                    String esprofe = "SELECT (profesor) FROM personas WHERE id_persona='" + idPersona + "' AND profesor=True";
-                    //System.out.println(esprofe);
-                    ResultSet rsesprofe = st.executeQuery(esprofe);
-                    if(rsesprofe.next())
-                        profesor=true;
-                    else
-                        profesor=false;
-                    String consultaClases = "SELECT * FROM participaciones WHERE id_persona="+idPersona;
-                    ResultSet rsConsultaClases = Conector.getSelect(consultaClases, conector);
-                    while(rsConsultaClases.next())
-                        arrayClases.add(rsConsultaClases.getInt("id_asignatura"));
-                    for (int i = 0; i < arrayClases.size(); i++) {
-                        String getDatosClase = "SELECT * FROM clases WHERE id_clase="+arrayClases.get(i);
-                        ResultSet rsDatosClase = Conector.getSelect(getDatosClase, conector);
-                        while(rsDatosClase.next()){
-                            int idClase = rsDatosClase.getInt("id_clase");
-                            String nombreClase = rsDatosClase.getString("nombre");
-                            String nombreCurso = rsDatosClase.getString("curso");
-                            int nota = rsDatosClase.getInt("nota");
-                            int ponEx = rsDatosClase.getInt("ponderacion_examen");
-                            int ponAct = rsDatosClase.getInt("ponderacion_actividades");
-                            int ponPro = rsDatosClase.getInt("ponderacion_proyectos");
-                            clase c = new clase(idClase, nombreClase, nombreCurso, nota, ponEx, ponAct, ponPro);
-                            datosClase.add(c);
-                        }
-                        int contador=0;
-                        while(datosClase.size()<contador){
-                            labelAsignatura1.setText(datosClase.get(contador).getNombre());
-                            contador++;
-                        }
-//                        labelAsignatura2.setText(datosClase.get(1).getNombre());
-//                        labelAsignatura3.setText(datosClase.get(2).getNombre());
-                        
-                        labelCurso1.setText(datosClase.get(0).getCurso());
-//                        labelCurso2.setText(datosClase.get(1).getCurso());
-//                        labelCurso3.setText(datosClase.get(2).getCurso());
-                        
-                    }
+            ResultSet rs = Conector.getSelect(consulta, conector);
+            if (rs.next()){
+                idPersona=rs.getInt("id_persona");
+                profesor=rs.getBoolean("profesor");
+                //SELECT p.id_persona, id_clase, a.nombre FROM participaciones as par, clases as a WHERE a.id_clase = par.id_asignatura and par.id_persona, curso;
+                String consultaClases = "SELECT id_persona, id_clase, clases.nombre,curso,color FROM participaciones, clases WHERE clases.id_clase = participaciones.id_asignatura and participaciones.id_persona="+idPersona;
+                ResultSet rsConsultaClases = Conector.getSelect(consultaClases, conector);
+                while(rsConsultaClases.next()){
+                    int idClase = rsConsultaClases.getInt("id_clase");
+                    String nombreClase = rsConsultaClases.getString("nombre");
+                    String nombreCurso = rsConsultaClases.getString("curso");
+                    //System.out.println(rsConsultaClases.getString("color"));
+                    //Color color = Color.valueOf(rsConsultaClases.getString("color"));
+                    //clase c = new clase(idClase, nombreClase, nombreCurso, color);
+                    clase c = new clase(idClase, nombreClase, nombreCurso);
+                    datosClase.add(c);
+                }
+                //Esto es muy cutre, ya se me ocurrirá una mejor forma de hacerlo xd
+                if(datosClase.size()>2){
+                    labelAsignatura3.setText(datosClase.get(2).getNombre());
+                    labelCurso3.setText(datosClase.get(2).getCurso());
+                    paneAsignatura3.setVisible(true);
+                }
+                if(datosClase.size()>1){
+                    labelAsignatura2.setText(datosClase.get(1).getNombre());
+                    labelCurso2.setText(datosClase.get(1).getCurso());
+                    paneAsignatura2.setVisible(true);
+                }
+                if(datosClase.size()>0){
+                    labelAsignatura1.setText(datosClase.get(0).getNombre());
+                    labelCurso1.setText(datosClase.get(0).getCurso());
+                    paneAsignatura1.setVisible(true);
+                }
+                if(datosClase.size()<4){
+                    botonAvanzarClase.setDisable(true);
                 }
                 setInvisible();
+                if(datosClase.size()==0){
+                    paneNoHayClases.setVisible(true);
+                    botonAvanzarClase.setVisible(false);
+                    botonVolverClase.setVisible(false);
+                }
                 barraMenu.setVisible(true);
                 clases.setVisible(true);
                 cambiaTamaño(880, 600);
                 smg2.setText("¡Bienvenido " + user + "!");
                 buttonCrearCurso.setVisible(profesor);
-                verMatricularAlumnosButton.setVisible(profesor);
             } else {
                 msg.setText("Usuario o contraseña incorrectos");
             }
@@ -258,9 +314,12 @@ public class InterfazController implements Initializable {
         setInvisible();
         barraMenu.setVisible(true);
         clases.setVisible(true);
+        buttonCrearCurso.setVisible(profesor);
         cambiaTamaño(880, 600);
         smg2.setText("Bienvenido " + user);
-        
+        idClase=-1;
+        nombreClaseMatricular="";
+        listaTareas.clear();
     }
 
     @FXML
@@ -268,13 +327,22 @@ public class InterfazController implements Initializable {
         setInvisible();
         login.setVisible(true);
         cambiaTamaño(729, 435);
+        datosClase.clear();      
+        listaTareas.clear();
+        paneAsignatura1.setVisible(false);
+        paneAsignatura2.setVisible(false);
+        paneAsignatura3.setVisible(false);
+        botonAvanzarClase.setDisable(false);
+        botonAvanzarClase.setVisible(true);
+        botonVolverClase.setVisible(true);
+        botonShowPaneCrearTarea.setVisible(false);
+        idClase=-1;
+        nombreClaseMatricular="";
     }
 
     public void imagenes() {
         Image image1 = new Image(getClass().getResourceAsStream("/img/Login.png"));
         ImageView imageView1 = new ImageView(image1);
-        Image image2 = new Image(getClass().getResourceAsStream("/img/interfaces.png"));
-        ImageView imageView2 = new ImageView(image2);
         Image image3 = new Image(getClass().getResourceAsStream("/img/alumno.png"));
         ImageView imgAlumno = new ImageView(image3);
         Image image4 = new Image(getClass().getResourceAsStream("/img/profesor.png"));
@@ -283,12 +351,14 @@ public class InterfazController implements Initializable {
         ImageView imgRegistrarProfesor = new ImageView(image5);
         Image image6 = new Image(getClass().getResourceAsStream("/img/alumno.png"));
         ImageView imgRegistrarAlumno = new ImageView(image5);
+        Image image7 = new Image(getClass().getResourceAsStream("/img/noclasespng.png"));
+        imgNoHayClases = new ImageView(image7);
         imgLogin.setImage(image1);
-        clase1.setImage(image2);
         imgAlumno.setImage(image3);
         imgProfesor.setImage(image4);
         imgRegistrarProfesor.setImage(image5);
         imgRegistrarAlumno.setImage(image6);
+        imgNoHayClases.setImage(image7);
                 
     }
 
@@ -329,6 +399,11 @@ public class InterfazController implements Initializable {
         paneCrearTarea.setVisible(false);
         paneTareasAlumno.setVisible(false);
         paneTareasProfesor.setVisible(false);
+        verMatricularAlumnosButton.setVisible(false);
+        paneNoHayClases.setVisible(false);
+        botonShowPaneCrearTarea.setVisible(false);
+        paneCrearTarea.setVisible(false);
+        buttonCrearCurso.setVisible(false);
     }
     
     public static String recuperarNombre(String cadena) {
@@ -359,28 +434,7 @@ public class InterfazController implements Initializable {
             Logger.getLogger(InterfazController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
-    public void cargarComboBoxCursosMatricular() {
-        ResultSet rs2;
-        ArrayList b = new ArrayList();
-        try {
-            PreparedStatement pst2 = conector.prepareStatement("SELECT * FROM clases", ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
-            rs2 = pst2.executeQuery();
-            comboBoxCursosMatricular.getItems().clear();
-            
-            while (rs2.next()){
-                String id_clase = rs2.getString("id_clase");
-                String nombreCurso = rs2.getString("nombre");
-                String cursoCurso = rs2.getString("curso");
-                String x = id_clase + "-" + nombreCurso + " " + cursoCurso;
-                b.add(x);
-            }
-            comboBoxCursosMatricular.getItems().addAll(b);
 
-        } catch (SQLException ex) {
-            Logger.getLogger(InterfazController.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
     
     
     @FXML
@@ -479,10 +533,12 @@ public class InterfazController implements Initializable {
     private void crearCurso(ActionEvent event) {
         String nombre = nombreClase.getText();
         String curso = nombreCurso.getText();
+        //Color color = colorPicker.getValue();
         if(nombre.equals(""))
             labelCrearCurso.setText("Introduzca el nombre!");
         else{
-            String insert = "INSERT INTO clases (nombre,curso) VALUES ('"+nombre+"','"+curso+"')";
+            //String insert = "INSERT INTO clases (nombre,curso,color) VALUES ('"+nombre+"','"+curso+"','"+color+"')";
+            String insert = "INSERT INTO clases (nombre,curso) VALUES ('"+nombre+"','"+curso+")";
             System.out.println(insert);
             int filas = Conector.insertTable(insert, conector);
             if(filas>0){
@@ -490,13 +546,16 @@ public class InterfazController implements Initializable {
                     String select = "SELECT id_clase FROM clases ORDER BY id_clase DESC";
                     ResultSet salida = Conector.getSelect(select, conector);
                     if(salida.first()){
-                        String idClase = salida.getString(1);
+                        int idClase = salida.getInt("id_clase");
                         String insertProfesor = "INSERT INTO participaciones VALUES('"+idPersona+"','"+idClase+"')";
                         System.out.println(insertProfesor);
                         int filasClase = Conector.insertTable(insertProfesor, conector);
                         if(filasClase>0){
                             labelCrearCurso.setText("Clase creada correctamente");
-                            arrayClases.add(idClase);
+                            //clase c = new clase(idClase, nombre, curso,color);
+                            clase c = new clase(idClase, nombre, curso);
+
+                            datosClase.add(c);
                         }
                         else
                             labelCrearCurso.setText("Error al insertar el profesor");
@@ -525,17 +584,15 @@ public class InterfazController implements Initializable {
     @FXML
     private void mostrarMatricularAlumnos(ActionEvent event) {
         setInvisible();
+        barraMenu.setVisible(true);
         paneMatricular.setVisible(true);
         cargarComboBoxAlumnosMatricular();
-        cargarComboBoxCursosMatricular();
     }
 
     @FXML
     private void anadirAlumno(ActionEvent event) {
         if(!comboBoxAlumnosMatricular.getValue().equals("")||!comboBoxCursosMatricular.getValue().equals("")){
-            String curso = comboBoxCursosMatricular.getValue().toString();
             String alumnos = comboBoxAlumnosMatricular.getValue().toString();
-            String idCurso = comboBoxCursosMatricular.getValue().toString().substring(0, curso.indexOf("-"));
             String idAlumno = comboBoxAlumnosMatricular.getValue().toString().substring(0, alumnos.indexOf("-"));
             int idPersona = Integer.parseInt(idAlumno);
             boolean esta=false;
@@ -550,11 +607,11 @@ public class InterfazController implements Initializable {
                 }
             }
             if(!esta){
-                String consulta = "SELECT * FROM participaciones WHERE id_persona="+idPersona+" AND id_asignatura="+Integer.parseInt(idCurso);
+                String consulta = "SELECT * FROM participaciones WHERE id_persona="+idPersona+" AND id_asignatura="+idClase;
                 ResultSet rs = Conector.getSelect(consulta, conector);
                 try {
                     if(rs.next())
-                        labelAlumnosMatriculados.setText("El alumno ya está matriculado en "+curso);
+                        labelAlumnosMatriculados.setText("El alumno ya está matriculado en "+nombreClaseMatricular);
                     else
                         rellenarAlumnosTextArea();
                 } catch (SQLException ex) {
@@ -585,8 +642,6 @@ public class InterfazController implements Initializable {
                 labelAlumnosMatriculados.setText("No hay ningún alumno seleccionado");
             }
             else{
-                String curso = comboBoxCursosMatricular.getValue().toString();
-                String idCurso = comboBoxCursosMatricular.getValue().toString().substring(0, curso.indexOf("-"));
                 System.out.println(cadenaAlumnos);
                 String[] arrayAlumnos = cadenaAlumnos.split(", ");
                 printArray(arrayAlumnos);
@@ -595,7 +650,7 @@ public class InterfazController implements Initializable {
 
                 for (int i = 0; i < arrayAlumnos.length; i++) {
                     int id = Integer.parseInt(arrayAlumnos[i].substring(0,arrayAlumnos[i].indexOf("-")));
-                    sql = "INSERT INTO participaciones VALUES ("+id+","+Integer.parseInt(idCurso)+")";
+                    sql = "INSERT INTO participaciones VALUES ("+id+","+idClase+")";
                     int resultado = st.executeUpdate(sql);
                     if (resultado > 0) {
                         insertado = true;
@@ -619,5 +674,218 @@ public class InterfazController implements Initializable {
     private void limpiarMatriculaciones(ActionEvent event) {
         alumnosTextArea.setText("");
     }
+    //Esto es una cutrada, pero funciona xd
+    @FXML
+    private void avanzarClase(ActionEvent event) {
+        labelAsignatura1.setText(datosClase.get(contador+1).getNombre());
+        labelCurso1.setText(datosClase.get(contador+1).getNombre());
+        //paneAsignatura1.setStyle("-fx-background-color:"+datosClase.get(contador+1).getColor());
+        labelAsignatura2.setText(datosClase.get(contador+2).getNombre());
+        labelCurso2.setText(datosClase.get(contador+2).getCurso());
+        //paneAsignatura2.setStyle("-fx-background-color:"+datosClase.get(contador+2).getColor());
+        labelAsignatura3.setText(datosClase.get(contador+3).getNombre());
+        labelCurso3.setText(datosClase.get(contador+3).getCurso());
+        //paneAsignatura2.setStyle("-fx-background-color:"+datosClase.get(contador+3).getColor());
+        contador++;
+        botonVolverClase.setDisable(false);
+        if(contador+3>=datosClase.size())
+            botonAvanzarClase.setDisable(true);
+        else
+            botonAvanzarClase.setDisable(false);
+        
+        
+    }
+
+
+    @FXML
+    private void volverClase(ActionEvent event) {
+        labelAsignatura1.setText(datosClase.get(contador-1).getNombre());
+        labelCurso1.setText(datosClase.get(contador-1).getNombre());
+        //paneAsignatura1.setStyle("-fx-background-color:"+datosClase.get(contador-1).getColor());
+        labelAsignatura2.setText(datosClase.get(contador).getNombre());
+        labelCurso2.setText(datosClase.get(contador).getCurso());
+        //paneAsignatura2.setStyle("-fx-background-color:"+datosClase.get(contador).getColor());
+        labelAsignatura3.setText(datosClase.get(contador+1).getNombre());
+        labelCurso3.setText(datosClase.get(contador+1).getCurso());
+        //paneAsignatura3.setStyle("-fx-background-color:"+datosClase.get(contador+1).getColor());
+        contador--;
+        botonAvanzarClase.setDisable(false);
+        if(contador-3<=-3)
+            botonVolverClase.setDisable(true);
+        else
+            botonVolverClase.setDisable(false);
+        
+    }
+
+    @FXML
+    private void abrirClase(MouseEvent event) {
+        Node source = (Node) event.getSource();
+        if(source==paneAsignatura1){
+            nombreClaseMatricular=datosClase.get(contador).getNombre();
+            labelClaseActual.setText(nombreClaseMatricular);
+            idClase=datosClase.get(contador).getId();
+        }
+        else if(source==paneAsignatura2){
+            nombreClaseMatricular=datosClase.get(contador+1).getNombre();
+            labelClaseActual.setText(nombreClaseMatricular);
+            idClase=datosClase.get(contador+1).getId();
+        }
+        else if(source==paneAsignatura3){
+            nombreClaseMatricular=datosClase.get(contador+2).getNombre();
+            labelClaseActual.setText(nombreClaseMatricular);
+            idClase=datosClase.get(contador+2).getId();
+        }
+        setInvisible();
+        botonShowPaneCrearTarea.setVisible(profesor);
+        verMatricularAlumnosButton.setVisible(profesor);
+        clase.setVisible(true);
+        barraMenu.setVisible(true);
+        cambiaTamaño(880, 600);
+        Pane header = (Pane) tablaTareas.lookup("TableHeaderRow");
+        header.setVisible(false);        
+        listaTareas = new ArrayList<>();
+        obs= FXCollections.observableArrayList();
+        try {
+            String consulta = "SELECT * FROM tareas WHERE id_asignatura="+idClase+" ORDER BY fecha_de_entrega";
+            System.out.println(consulta);
+            ResultSet rs = Conector.getSelect(consulta, conector);
+            while(rs.next()){
+                int id = rs.getInt("id_tarea");
+                String nombre = rs.getString("enunciado");
+                String tipo = rs.getString("tipo_tarea");
+                Date fecha = rs.getDate("fecha_de_entrega");
+                String desc = rs.getString("descripcion");
+                tarea t = new tarea(id, nombre, tipo, fecha, desc);
+                listaTareas.add(t);
+                obs.add(t);
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(InterfazController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        rellenaTabla();
+        idTarea.setVisible(false);
+    }
+    
+    private void rellenaTabla(){
+        
+        Iterator iter = listaTareas.iterator();
+        nombreTarea.setCellValueFactory(new PropertyValueFactory("nombre"));
+        tipoTarea.setCellValueFactory(new PropertyValueFactory("tipo"));
+        fechaEntrega.setCellValueFactory(new PropertyValueFactory("fecha"));
+        idTarea.setCellValueFactory(new PropertyValueFactory("id"));
+        tablaTareas.setItems(obs);
+    }
+    
+    
+    @FXML
+    private void crearCursoCancelar(ActionEvent event) {
+        paneCrearCurso.setVisible(false);
+        clases.setDisable(false);
+        menu.setDisable(false);
+    }
+
+    @FXML
+    private void buttonAddTarea(ActionEvent event) {
+        
+        try {
+            String enunciado = enunciadoTextField.getText();
+            String descripcion = descripcionTextArea.getText();
+            String tipoTarea="",fechaEntrega="";
+            try{
+                tipoTarea = tipoTareaComboBox.getValue().toString();
+                fechaEntrega = fechaEntregaDatePicker.getValue().toString();
+            }
+            catch(NullPointerException ex){
+                System.out.println("tal");
+            }
+            String fechaLimite = "2023/2/24";
+            String ponderacionTarea = ponderacionTextField.getText();
+            Pattern p = Pattern.compile("\\d{1,100}");
+            Matcher m = p.matcher(ponderacionTarea);
+            if(enunciado.equals(""))
+                msgLabelCrearTarea.setText("El enunciado no puede estar vacío");
+            else if(tipoTarea.equals(""))
+                msgLabelCrearTarea.setText("Introduce un tipo de tarea");
+            else if(fechaEntrega.equals(""))
+                fechaEntregaDatePicker.setValue(LocalDate.now().plusDays(7));
+            else if(!m.matches())
+                msgLabelCrearTarea.setText("Introduzca la ponderacion correctamente (1-100)");
+            else{
+                Statement st = conector.createStatement();
+                String sql = "INSERT INTO tareas (enunciado, descripcion, tipo_tarea, fecha_de_entrega, fecha_limite, id_asignatura, ponderacion_tarea) VALUES"
+                        + " ('"+enunciado+"','"+descripcion+"','"+tipoTarea+"','"+fechaEntrega+"','"+fechaLimite+"',"+idClase+","+ponderacionTarea+")";
+                System.out.println(sql);
+                int resultado = st.executeUpdate(sql);
+                if (resultado > 0) {
+                    msgLabelCrearTarea.setText("Tarea registrada correctamente");
+                }else{
+                    msgLabelCrearTarea.setText("¡ERROR!");
+                }
+            }
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(InterfazController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+    }
+
+    @FXML
+    private void showPaneCrearTarea(ActionEvent event) {
+        setInvisible();
+        barraMenu.setVisible(true);
+        paneCrearTarea.setVisible(true);
+        tipoTareaComboBox.getItems().clear();
+        ArrayList tareas = new ArrayList();
+        tareas.add("Actividad");
+        tareas.add("Examen");
+        tareas.add("Proyecto");
+        tipoTareaComboBox.getItems().addAll(tareas);
+    }
+    
+     private final ListChangeListener<tarea> selectorTablaTareas = new ListChangeListener<tarea>(){
+            @Override
+            public void onChanged(ListChangeListener.Change<? extends tarea> c){
+                
+            }
+            
+        };
+
+    private void ponerTareaSelecionada(){
+        final tarea t = getTablaTareasSeleccionada();
+        posicionTareaEnTabla = listaTareas.indexOf(t);
+        if(t!=null){
+            nombreTareaAlumno.setText(t.getNombre());
+            tareaDescripcionAlumno.setText(t.getDesc());
+        }
+    }
+    
+   
+       
+    
+    public tarea getTablaTareasSeleccionada(){
+        if(tablaTareas != null){
+            List<tarea> tabla = tablaTareas.getSelectionModel().getSelectedItems();
+            if(tabla.size()==1){
+                final tarea competicionSeleccionada = tabla.get(0);
+                return competicionSeleccionada;
+            }
+        }
+        return null;
+    }    
+            
+    @FXML
+    private void abrirTarea(MouseEvent event) {
+       
+       ponerTareaSelecionada();
+       setInvisible();
+       if(profesor)
+           paneTareasAlumno.setVisible(true);
+       else
+           paneTareasAlumno.setVisible(true);
+       barraMenu.setVisible(true);
+        
+    }
+
 
 }

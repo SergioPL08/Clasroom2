@@ -15,11 +15,11 @@ import java.sql.Statement;
  */
 public class Conector {
     // Para establecer la conexión con la base de datos tenemos que seguir la siguiente estructura: jdbc:mysql://[host][:puerto]/[DB]
-    static final private String HOST = "localhost";
+    static final private String HOST = "servidor.choto.es";
     static final private String PORT = "3306";
-    static final private String DBNAME = "classroom";
-    static final private String USER = "root";
-    static final private String PASS = "";
+    static final private String DBNAME = "alu_Sergio_Juanma_clasroom";
+    static final private String USER = "unalumno";
+    static final private String PASS = "soyunalumno2022";
     
 
 // Para usarlo con MariaDB en una base de datos local llamada javanet  -> Connnection conex = new Conexion("localhost","3306","javanet","javanet","1234qwerty").makeconnect();
